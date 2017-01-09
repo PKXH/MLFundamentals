@@ -1,0 +1,452 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 10.3' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     18509,        443]
+NotebookOptionsPosition[     17834,        416]
+NotebookOutlinePosition[     18224,        433]
+CellTagsIndexPosition[     18181,        430]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[TextData[{
+ StyleBox["Gradient Descenet",
+  FontWeight->"Bold"],
+ "\n\nConsider the nonlinear error surface E(u, v) = ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox[
+    RowBox[{"(", 
+     RowBox[{
+      SuperscriptBox["u\[ExponentialE]", "v"], "-", 
+      RowBox[{"2", 
+       SuperscriptBox["v\[ExponentialE]", 
+        RowBox[{"-", "u"}]]}]}], ")"}], "2"], TraditionalForm]]],
+ ". We start at the point (u,v) = (1,1) and minimize this error using \
+gradient descent in the uv space. Use \[Eta] = 0.1 (learning rate, not step \
+size)."
+}], "Text",
+ CellChangeTimes->{{3.686832093825015*^9, 3.686832174281034*^9}},
+ Background->RGBColor[1, 0.9, 0.8]],
+
+Cell[TextData[{
+ StyleBox["Gradient Descent (err \[LessEqual] ",
+  FontWeight->"Bold"],
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["10", 
+    RowBox[{"-", "14"}]], TraditionalForm]],
+  FormatType->"TraditionalForm",
+  FontWeight->"Bold"],
+ ")",
+ "\n\nLet\[CloseCurlyQuote]s see how many runs it takes until error drops \
+below ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["10", 
+    RowBox[{"-", "14"}]], TraditionalForm]]]
+}], "Text",
+ CellChangeTimes->{{3.68687253134655*^9, 3.686872579967657*^9}, {
+  3.692451478762618*^9, 3.6924515734775143`*^9}, {3.692451611409786*^9, 
+  3.692451617258407*^9}, {3.692451649244384*^9, 3.6924517144414377`*^9}, {
+  3.6924517568923693`*^9, 3.692451783682358*^9}, {3.692451979937148*^9, 
+  3.692451988398492*^9}, {3.692452220970003*^9, 3.692452282980174*^9}},
+ Background->RGBColor[0.94, 0.91, 0.88]],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", " ", 
+   RowBox[{"reset", " ", "globals"}], " ", "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{"Clear", "[", "Experiment1", "]"}], "\[IndentingNewLine]", 
+   RowBox[{"Clear", "[", 
+    RowBox[{"e1\[DoubleStruckW]", ",", "e1\[Eta]", ",", "e1i", ",", "e1err"}],
+     "]"}]}]}]], "Input",
+ CellChangeTimes->{{3.686870862578318*^9, 3.686870886781045*^9}, {
+   3.686872591794333*^9, 3.686872624032741*^9}, 3.692451842995453*^9, {
+   3.692451873732036*^9, 3.6924519350250463`*^9}},
+ Background->GrayLevel[0.85]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"Experiment1", "[", "]"}], ":=", "\[IndentingNewLine]", 
+   RowBox[{"Module", "[", 
+    RowBox[{
+     RowBox[{"{", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"\[Eta]", "=", "0.1"}], ",", "\[IndentingNewLine]", 
+       RowBox[{"\[DoubleStruckW]", "=", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", "1"}], "}"}]}], ",", "\[IndentingNewLine]", 
+       RowBox[{"err", "=", "1"}], ",", "\[IndentingNewLine]", "i", ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"maxIters", " ", "=", " ", "10000"}], ",", 
+       "\[IndentingNewLine]", "Ee"}], "\[IndentingNewLine]", "}"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"Ee", "[", 
+        RowBox[{"u_", ",", "v_"}], "]"}], ":=", 
+       SuperscriptBox[
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{"u", " ", 
+           SuperscriptBox["\[ExponentialE]", "v"]}], "-", 
+          RowBox[{"2", "v", " ", 
+           SuperscriptBox["\[ExponentialE]", 
+            RowBox[{"-", "u"}]]}]}], ")"}], "2"]}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"For", "[", 
+       RowBox[{
+        RowBox[{"i", "=", "0"}], ",", 
+        RowBox[{
+         RowBox[{"i", "<", " ", "maxIters"}], "\[And]", 
+         RowBox[{"err", ">", 
+          SuperscriptBox["10", 
+           RowBox[{"-", "14"}]]}]}], ",", 
+        RowBox[{"i", "++"}], ",", 
+        RowBox[{"(", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"\[DoubleStruckW]", "=", 
+           RowBox[{
+            RowBox[{"\[DoubleStruckW]", "-", 
+             RowBox[{"\[Eta]", 
+              RowBox[{
+               SubscriptBox["\[Del]", 
+                RowBox[{"{", 
+                 RowBox[{"u", ",", "v"}], "}"}]], 
+               RowBox[{"Ee", "[", 
+                RowBox[{"u", ",", "v"}], "]"}]}]}]}], "/.", 
+            RowBox[{"{", 
+             RowBox[{
+              RowBox[{"u", "\[Rule]", 
+               RowBox[{"\[DoubleStruckW]", "[", 
+                RowBox[{"[", "1", "]"}], "]"}]}], ",", 
+              RowBox[{"v", "\[Rule]", 
+               RowBox[{"\[DoubleStruckW]", "[", 
+                RowBox[{"[", "2", "]"}], "]"}]}]}], "}"}]}]}], ";", 
+          "\[IndentingNewLine]", 
+          RowBox[{"err", "=", 
+           RowBox[{"Ee", "[", 
+            RowBox[{
+             RowBox[{"\[DoubleStruckW]", "[", 
+              RowBox[{"[", "1", "]"}], "]"}], ",", 
+             RowBox[{"\[DoubleStruckW]", "[", 
+              RowBox[{"[", "2", "]"}], "]"}]}], "]"}]}], ";"}], 
+         "\[IndentingNewLine]", ")"}]}], "\[IndentingNewLine]", "]"}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"{", 
+       RowBox[{"\[DoubleStruckW]", ",", "\[Eta]", ",", "i", ",", "err"}], 
+       "}"}]}]}], "\[IndentingNewLine]", "]"}]}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"e1\[DoubleStruckW]", ",", "e1\[Eta]", ",", "e1i", ",", "e1err"}],
+     "}"}], "=", 
+   RowBox[{"Experiment1", "[", "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{"StringForm", "[", "\[IndentingNewLine]", 
+  RowBox[{"\"\<Gradient descent results (\[Eta]=``):\\n\!\(\*
+StyleBox[\"\[DoubleStruckW]\",
+FontColor->RGBColor[0, 0, 1]]\)\!\(\*
+StyleBox[\"=\",
+FontColor->RGBColor[0, 0, 1]]\)``, \!\(\*
+StyleBox[\"i\",
+FontColor->RGBColor[0, 0, 1]]\)\!\(\*
+StyleBox[\"=\",
+FontColor->RGBColor[0, 0, 1]]\)``, err=``\>\"", ",", "e1\[Eta]", ",", 
+   "e1\[DoubleStruckW]", ",", " ", "e1i", ",", "e1err"}], 
+  "]"}], "\[IndentingNewLine]"}], "Input",
+ CellChangeTimes->{{3.6868660646677437`*^9, 3.6868660775245237`*^9}, {
+   3.686866178347183*^9, 3.686866185103743*^9}, {3.6868662162812357`*^9, 
+   3.6868662612294073`*^9}, {3.686866310885517*^9, 3.686866314315568*^9}, {
+   3.686866510022455*^9, 3.6868666828368807`*^9}, {3.686866715446553*^9, 
+   3.686866804865779*^9}, {3.686867645610188*^9, 3.68686764582369*^9}, {
+   3.686869578753685*^9, 3.686869662893202*^9}, {3.686869805160969*^9, 
+   3.686869809278335*^9}, {3.686870087284027*^9, 3.686870121114458*^9}, {
+   3.686870283316524*^9, 3.686870506306904*^9}, {3.6868706386008663`*^9, 
+   3.686870699466989*^9}, {3.6868707352924*^9, 3.686870839789949*^9}, {
+   3.686870963362402*^9, 3.686870984369121*^9}, {3.6868710213219547`*^9, 
+   3.686871069830961*^9}, {3.686871143924653*^9, 3.686871156706067*^9}, {
+   3.686871570913889*^9, 3.686871572297171*^9}, {3.686871732459004*^9, 
+   3.6868717588974*^9}, 3.686871804633911*^9, {3.686871870693585*^9, 
+   3.686871879676447*^9}, {3.686872089638068*^9, 3.686872146025667*^9}, {
+   3.686872197018585*^9, 3.686872246246152*^9}, {3.686872627513171*^9, 
+   3.686872646384202*^9}, {3.686872762404159*^9, 3.686872765329873*^9}, {
+   3.686872990025023*^9, 3.686872992904323*^9}, {3.686873925748279*^9, 
+   3.686873926402011*^9}, {3.692451842147345*^9, 3.692451842674803*^9}, {
+   3.69245187316753*^9, 3.692451934874799*^9}}],
+
+Cell[BoxData[
+ InterpretationBox["\<\"Gradient descent results \
+(\[Eta]=\\!\\(\\*RowBox[{\\\"0.1`\\\"}]\\)):\\n\\!\\(\\*\\nStyleBox[\\\"\
+\[DoubleStruckW]\\\",\\nFontColor->RGBColor[0, 0, 1]]\\)\\!\\(\\*\\nStyleBox[\
+\\\"=\\\",\\nFontColor->RGBColor[0, 0, 1]]\\)\\!\\(\\*RowBox[{\\\"{\\\", \
+RowBox[{\\\"0.04473629039778219`\\\", \\\",\\\", \
+\\\"0.02395871409914182`\\\"}], \\\"}\\\"}]\\), \
+\\!\\(\\*\\nStyleBox[\\\"i\\\",\\nFontColor->RGBColor[0, 0, \
+1]]\\)\\!\\(\\*\\nStyleBox[\\\"=\\\",\\nFontColor->RGBColor[0, 0, \
+1]]\\)\\!\\(\\*RowBox[{\\\"10\\\"}]\\), \
+err=\\!\\(\\*RowBox[{\\\"1.2086833939395977`*^-15\\\"}]\\)\"\>",
+  StringForm[
+  "Gradient descent results (\[Eta]=``):\n\!\(\*\nStyleBox[\"\[DoubleStruckW]\
+\",\nFontColor->RGBColor[0, 0, 1]]\)\!\(\*\nStyleBox[\"=\",\n\
+FontColor->RGBColor[0, 0, 1]]\)``, \!\(\*\nStyleBox[\"i\",\n\
+FontColor->RGBColor[0, 0, 1]]\)\!\(\*\nStyleBox[\"=\",\n\
+FontColor->RGBColor[0, 0, 1]]\)``, err=``", 0.1, {0.04473629039778219, 
+   0.02395871409914182}, 10, 1.2086833939395977`*^-15],
+  Editable->False]], "Output",
+ CellChangeTimes->{
+  3.686866186278211*^9, {3.686866232170089*^9, 3.686866262138008*^9}, 
+   3.6868709034455423`*^9, {3.6868709642885847`*^9, 3.686870987839382*^9}, 
+   3.6868710461637077`*^9, {3.686871131312286*^9, 3.686871153068595*^9}, 
+   3.6868715197732773`*^9, 3.686871628369048*^9, 3.686871725100792*^9, 
+   3.686871763064843*^9, 3.686871808704899*^9, {3.686871874278576*^9, 
+   3.6868718943970633`*^9}, {3.6868720960013733`*^9, 3.686872141282866*^9}, {
+   3.686872203914456*^9, 3.686872249940605*^9}, 3.686872358126313*^9, 
+   3.6868726620558434`*^9, 3.6868727659596987`*^9, 3.686872993799213*^9, 
+   3.686873930954835*^9, 3.692451949834464*^9, 3.692452001031103*^9},
+ Background->RGBColor[0.88, 1, 0.88]]
+}, Open  ]],
+
+Cell[TextData[{
+ StyleBox["Comparison with \[OpenCurlyDoubleQuote]coordinate descent\
+\[CloseCurlyDoubleQuote]",
+  FontWeight->"Bold"],
+ "\n\nCompare the performance of \[OpenCurlyDoubleQuote]coordinate descent.\
+\[CloseCurlyDoubleQuote] In each iteration, we have two steps along the 2 \
+coordinates. Step 1 is to move only along the u coordinate to reduce the \
+error (assume first-order approximation holds like in gradient descent), and \
+step 2 is to reevaluate and move only along the v coordinate to reduce the \
+error (again, assume first-order approximation holds). Use the same learning \
+rate of \[Eta] = 0.1 as we did in gradient descent. Let\[CloseCurlyQuote]s \
+check the error E(u,v) after 15 full iterations (30 steps)."
+}], "Text",
+ CellChangeTimes->{{3.6868730476046124`*^9, 3.686873085572126*^9}, {
+  3.6868741649203777`*^9, 3.686874195625051*^9}, {3.692452008622459*^9, 
+  3.692452010527398*^9}, {3.692452053356333*^9, 3.692452089626631*^9}},
+ Background->RGBColor[0.94, 0.91, 0.88]],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", " ", 
+   RowBox[{"reset", " ", "globals"}], " ", "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{"Clear", "[", "Experiment2", "]"}], "\[IndentingNewLine]", 
+   RowBox[{"Clear", "[", 
+    RowBox[{"e2\[DoubleStruckW]", ",", "e2\[Eta]", ",", "e2i", ",", "e2err"}],
+     "]"}]}]}]], "Input",
+ CellChangeTimes->{{3.686870862578318*^9, 3.686870886781045*^9}, {
+  3.686872591794333*^9, 3.686872624032741*^9}, {3.686873243854479*^9, 
+  3.686873258484509*^9}, {3.69245212984972*^9, 3.692452181175736*^9}},
+ Background->GrayLevel[0.85]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"Experiment2", "[", "]"}], ":=", "\[IndentingNewLine]", 
+   RowBox[{"Module", "[", 
+    RowBox[{
+     RowBox[{"{", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"\[Eta]", "=", "0.1"}], ",", "\[IndentingNewLine]", 
+       RowBox[{"\[DoubleStruckW]", "=", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", "1"}], "}"}]}], ",", "\[IndentingNewLine]", 
+       RowBox[{"err", "=", "1"}], ",", "\[IndentingNewLine]", "i", ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{"maxIters", " ", "=", " ", "15"}], ",", "\[IndentingNewLine]", 
+       "Ee"}], "\[IndentingNewLine]", "}"}], ",", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"Ee", "[", 
+        RowBox[{"u_", ",", "v_"}], "]"}], ":=", 
+       SuperscriptBox[
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{"u", " ", 
+           SuperscriptBox["\[ExponentialE]", "v"]}], "-", 
+          RowBox[{"2", "v", " ", 
+           SuperscriptBox["\[ExponentialE]", 
+            RowBox[{"-", "u"}]]}]}], ")"}], "2"]}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"For", "[", 
+       RowBox[{
+        RowBox[{"i", "=", "0"}], ",", 
+        RowBox[{
+         RowBox[{"i", "<", " ", "maxIters"}], "\[And]", 
+         RowBox[{"err", ">", 
+          SuperscriptBox["10", 
+           RowBox[{"-", "14"}]]}]}], ",", 
+        RowBox[{"i", "++"}], ",", 
+        RowBox[{"(", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"\[DoubleStruckW]", "=", 
+           RowBox[{"\[DoubleStruckW]", "-", 
+            RowBox[{"\[Eta]", 
+             RowBox[{"{", 
+              RowBox[{
+               RowBox[{
+                RowBox[{"(", 
+                 RowBox[{
+                  RowBox[{
+                   SubscriptBox["\[Del]", 
+                    RowBox[{"{", "u", "}"}]], 
+                   RowBox[{"Ee", "[", 
+                    RowBox[{"u", ",", "v"}], "]"}]}], "/.", 
+                  RowBox[{"{", 
+                   RowBox[{
+                    RowBox[{"u", "\[Rule]", 
+                    RowBox[{"\[DoubleStruckW]", "[", 
+                    RowBox[{"[", "1", "]"}], "]"}]}], ",", 
+                    RowBox[{"v", "\[Rule]", 
+                    RowBox[{"\[DoubleStruckW]", "[", 
+                    RowBox[{"[", "2", "]"}], "]"}]}]}], "}"}]}], ")"}], "[", 
+                RowBox[{"[", "1", "]"}], "]"}], ",", "0"}], "}"}]}]}]}], ";", 
+          "\[IndentingNewLine]", 
+          RowBox[{"\[DoubleStruckW]", "=", 
+           RowBox[{"\[DoubleStruckW]", "-", 
+            RowBox[{"\[Eta]", 
+             RowBox[{"{", 
+              RowBox[{"0", ",", 
+               RowBox[{
+                RowBox[{"(", 
+                 RowBox[{
+                  RowBox[{
+                   SubscriptBox["\[Del]", 
+                    RowBox[{"{", "v", "}"}]], 
+                   RowBox[{"Ee", "[", 
+                    RowBox[{"u", ",", "v"}], "]"}]}], "/.", 
+                  RowBox[{"{", 
+                   RowBox[{
+                    RowBox[{"u", "\[Rule]", 
+                    RowBox[{"\[DoubleStruckW]", "[", 
+                    RowBox[{"[", "1", "]"}], "]"}]}], ",", 
+                    RowBox[{"v", "\[Rule]", 
+                    RowBox[{"\[DoubleStruckW]", "[", 
+                    RowBox[{"[", "2", "]"}], "]"}]}]}], "}"}]}], ")"}], "[", 
+                RowBox[{"[", "1", "]"}], "]"}]}], "}"}]}]}]}], ";", 
+          "\[IndentingNewLine]", 
+          RowBox[{"err", "=", 
+           RowBox[{"Ee", "[", 
+            RowBox[{
+             RowBox[{"\[DoubleStruckW]", "[", 
+              RowBox[{"[", "1", "]"}], "]"}], ",", 
+             RowBox[{"\[DoubleStruckW]", "[", 
+              RowBox[{"[", "2", "]"}], "]"}]}], "]"}]}], ";"}], 
+         "\[IndentingNewLine]", ")"}]}], "\[IndentingNewLine]", "]"}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"{", 
+       RowBox[{"\[DoubleStruckW]", ",", "\[Eta]", ",", "i", ",", "err"}], 
+       "}"}]}]}], "\[IndentingNewLine]", "]"}]}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{"e2\[DoubleStruckW]", ",", "e2\[Eta]", ",", "e2i", ",", "e2err"}],
+     "}"}], "=", 
+   RowBox[{"Experiment2", "[", "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{"StringForm", "[", "\[IndentingNewLine]", 
+  RowBox[{"\"\<Coordinate descent results (\[Eta]=``):\\n\!\(\*
+StyleBox[\"\[DoubleStruckW]\",
+FontColor->GrayLevel[0]]\)\!\(\*
+StyleBox[\"=\",
+FontColor->GrayLevel[0]]\)``, \!\(\*
+StyleBox[\"i\",
+FontColor->GrayLevel[0]]\)\!\(\*
+StyleBox[\"=\",
+FontColor->GrayLevel[0]]\)``, \!\(\*
+StyleBox[\"err\",
+FontColor->RGBColor[0, 0, 1]]\)\!\(\*
+StyleBox[\"=\",
+FontColor->RGBColor[0, 0, 1]]\)``\>\"", ",", "e2\[Eta]", ",", 
+   "e2\[DoubleStruckW]", ",", " ", "e2i", ",", "e2err"}], 
+  "]"}], "\[IndentingNewLine]"}], "Input",
+ CellChangeTimes->{{3.686873183072569*^9, 3.686873233077609*^9}, {
+   3.6868735457632236`*^9, 3.686873562016533*^9}, {3.686873593560513*^9, 
+   3.686873599271545*^9}, {3.686873746570776*^9, 3.68687380228034*^9}, {
+   3.686873909643331*^9, 3.6868739189161053`*^9}, {3.686874028247698*^9, 
+   3.686874052286495*^9}, 3.686874117484764*^9, {3.686874214752358*^9, 
+   3.6868742163660088`*^9}, {3.686874366580963*^9, 3.6868743846232977`*^9}, {
+   3.692452129287323*^9, 3.692452181009183*^9}}],
+
+Cell[BoxData[
+ InterpretationBox["\<\"Coordinate descent results \
+(\[Eta]=\\!\\(\\*RowBox[{\\\"0.1`\\\"}]\\)):\\n\\!\\(\\*\\nStyleBox[\\\"\
+\[DoubleStruckW]\\\",\\nFontColor->GrayLevel[0]]\\)\\!\\(\\*\\nStyleBox[\\\"=\
+\\\",\\nFontColor->GrayLevel[0]]\\)\\!\\(\\*RowBox[{\\\"{\\\", \
+RowBox[{\\\"6.297075899305187`\\\", \\\",\\\", RowBox[{\\\"-\\\", \
+\\\"2.8523069540778136`\\\"}]}], \\\"}\\\"}]\\), \\!\\(\\*\\nStyleBox[\\\"i\\\
+\",\\nFontColor->GrayLevel[0]]\\)\\!\\(\\*\\nStyleBox[\\\"=\\\",\\nFontColor->\
+GrayLevel[0]]\\)\\!\\(\\*RowBox[{\\\"15\\\"}]\\), \
+\\!\\(\\*\\nStyleBox[\\\"err\\\",\\nFontColor->RGBColor[0, 0, 1]]\\)\\!\\(\\*\
+\\nStyleBox[\\\"=\\\",\\nFontColor->RGBColor[0, 0, \
+1]]\\)\\!\\(\\*RowBox[{\\\"0.13981379199615304`\\\"}]\\)\"\>",
+  StringForm[
+  "Coordinate descent results (\[Eta]=``):\n\!\(\*\nStyleBox[\"\
+\[DoubleStruckW]\",\nFontColor->GrayLevel[0]]\)\!\(\*\nStyleBox[\"=\",\n\
+FontColor->GrayLevel[0]]\)``, \!\(\*\nStyleBox[\"i\",\n\
+FontColor->GrayLevel[0]]\)\!\(\*\nStyleBox[\"=\",\n\
+FontColor->GrayLevel[0]]\)``, \!\(\*\nStyleBox[\"err\",\n\
+FontColor->RGBColor[0, 0, 1]]\)\!\(\*\nStyleBox[\"=\",\n\
+FontColor->RGBColor[0, 0, 1]]\)``", 0.1, {
+   6.297075899305187, -2.8523069540778136`}, 15, 0.13981379199615304`],
+  Editable->False]], "Output",
+ CellChangeTimes->{{3.686873575461617*^9, 3.686873600362307*^9}, 
+   3.686873832576036*^9, 3.686873913047481*^9, 3.686874016609193*^9, {
+   3.686874095534646*^9, 3.686874104449195*^9}, 3.686874140682115*^9, 
+   3.686874219956215*^9, 3.686874268779686*^9, {3.686874369858139*^9, 
+   3.6868743855266237`*^9}, 3.692452200682053*^9},
+ Background->RGBColor[0.88, 1, 0.88]]
+}, Open  ]]
+},
+WindowSize->{808, 751},
+WindowMargins->{{117, Automatic}, {45, Automatic}},
+Magnification:>1.25 Inherited,
+FrontEndVersion->"10.3 for Mac OS X x86 (32-bit, 64-bit Kernel) (December 10, \
+2015)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 656, 18, 155, "Text"],
+Cell[1217, 40, 838, 22, 109, "Text"],
+Cell[2058, 64, 553, 12, 98, "Input"],
+Cell[CellGroupData[{
+Cell[2636, 80, 4868, 109, 574, "Input"],
+Cell[7507, 191, 1780, 29, 91, "Output"]
+}, Open  ]],
+Cell[9302, 223, 1003, 16, 247, "Text"],
+Cell[10308, 241, 572, 12, 98, "Input"],
+Cell[CellGroupData[{
+Cell[10905, 257, 5258, 127, 596, "Input"],
+Cell[16166, 386, 1652, 27, 91, "Output"]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)

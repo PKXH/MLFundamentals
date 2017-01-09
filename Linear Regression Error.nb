@@ -1,0 +1,246 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 10.3' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[      7578,        237]
+NotebookOptionsPosition[      6835,        208]
+NotebookOutlinePosition[      7223,        225]
+CellTagsIndexPosition[      7180,        222]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[TextData[{
+ StyleBox["Linear Regression Error\n\n",
+  FontWeight->"Bold"],
+ "Consider a noisy target y = ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["\[DoubleStruckW]", 
+    RowBox[{"*", "T"}]], TraditionalForm]]],
+ "\[DoubleStruckX]+\[CurlyEpsilon], where \[DoubleStruckX] \[Element] ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["\[DoubleStruckCapitalR]", "d"], TraditionalForm]]],
+ " (with the added coordinate ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["\[DoubleStruckX]", "0"], TraditionalForm]]],
+ "=1), y \[Element] \[DoubleStruckCapitalR], ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["\[DoubleStruckW]", "*"], TraditionalForm]]],
+ " is an unknown vector, and \[CurlyEpsilon] is a noise term with zero mean \
+and ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["\[Sigma]", "2"], TraditionalForm]]],
+ " variance. Assume \[CurlyEpsilon] is independent of \[DoubleStruckX] and of \
+all other \[CurlyEpsilon]\[CloseCurlyQuote]s. If linear regression is carried \
+out using a training data set \[ScriptCapitalD] = ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"{", 
+    RowBox[{"(", 
+     SubscriptBox["\[DoubleStruckX]", "1"]}]}], TraditionalForm]]],
+ ", ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["y", "1"], TraditionalForm]]],
+ "),...,",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"(", 
+    SubscriptBox["\[DoubleStruckX]", "N"]}], TraditionalForm]]],
+ ", ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["y", "N"], TraditionalForm]]],
+ ")}, and outputs the parameter vector ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["\[DoubleStruckW]", "lin"], TraditionalForm]]],
+ ", it can be shown that the expected in-sample error ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SubscriptBox["E", "in"], " "}], TraditionalForm]]],
+ "with respect to \[ScriptCapitalD] is given by:\n\n",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"\t\t\t\t", 
+    SubscriptBox["\[DoubleStruckCapitalE]", "\[ScriptCapitalD]"]}], 
+   TraditionalForm]]],
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    RowBox[{"[", 
+     RowBox[{
+      SubscriptBox["E", "in"], "(", 
+      SubscriptBox["\[DoubleStruckW]", "lin"], ")"}], "]"}], " ", "=", " ", 
+    RowBox[{
+     SuperscriptBox["\[Sigma]", "2"], "(", 
+     RowBox[{"1", "-", 
+      FractionBox[
+       RowBox[{"d", "+", "1"}], "N"]}], ")"}]}], TraditionalForm]]]
+}], "Text",
+ CellChangeTimes->{{3.686824119346773*^9, 3.686824129566259*^9}, {
+  3.6868244891051197`*^9, 3.686824578617289*^9}, {3.6868246293536453`*^9, 
+  3.686824725294661*^9}, {3.6868731136250763`*^9, 3.686873113625104*^9}},
+ Background->RGBColor[1, 0.9, 0.8]],
+
+Cell[TextData[{
+ StyleBox["An exercise: \[Sigma]=0.1, d=8, ",
+  FontWeight->"Bold"],
+ Cell[BoxData[
+  FormBox[
+   RowBox[{
+    SubscriptBox["E", "in"], ">", "0.008"}], TraditionalForm]],
+  FormatType->"TraditionalForm",
+  FontWeight->"Bold"],
+ "\n\nFor \[Sigma] = 0.1 and d = 8, determine the smallest number of examples \
+N that will result in an expected ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["E", "in"], TraditionalForm]]],
+ " greater than 0.008 using the following cutoffs: 10, 25, ",
+ StyleBox["100",
+  FontWeight->"Bold",
+  FontColor->RGBColor[0, 0, 1]],
+ ", 500, 1000"
+}], "Text",
+ CellChangeTimes->{{3.686824150134699*^9, 3.686824485764468*^9}, {
+   3.686824747765774*^9, 3.686824766100382*^9}, 3.686824805026898*^9, {
+   3.6924510124564133`*^9, 3.6924510975452003`*^9}, {3.692451132167314*^9, 
+   3.69245118272886*^9}},
+ Background->RGBColor[0.94, 0.91, 0.88]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"MaxNforE", "[", 
+   RowBox[{"edin_", ",", "\[Sigma]_", ",", "d_"}], "]"}], ":=", 
+  RowBox[{"Solve", "[", 
+   RowBox[{
+    RowBox[{"edin", "\[Equal]", 
+     RowBox[{
+      SuperscriptBox["\[Sigma]", "2"], 
+      RowBox[{"(", 
+       RowBox[{"1", "-", 
+        FractionBox[
+         RowBox[{"d", "+", "1"}], "N"]}], ")"}]}]}], ",", "N"}], 
+   "]"}]}], "\[IndentingNewLine]", 
+ RowBox[{"MaxNforE", "[", 
+  RowBox[{"0.008", ",", "0.1", ",", "8"}], "]"}]}], "Input",
+ CellChangeTimes->{{3.686824839463496*^9, 3.686825063280192*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  StyleBox[
+   RowBox[{"Solve", "::", "ratnz"}], "MessageName"], 
+  RowBox[{
+  ":", " "}], "\<\"Solve was unable to solve the system with inexact \
+coefficients. The answer was obtained by solving a corresponding exact system \
+and numericizing the result. \\!\\(\\*ButtonBox[\\\"\[RightSkeleton]\\\", \
+ButtonStyle->\\\"Link\\\", ButtonFrame->None, \
+ButtonData:>\\\"paclet:ref/Solve\\\", ButtonNote -> \
+\\\"Solve::ratnz\\\"]\\)\"\>"}]], "Message", "MSG",
+ CellChangeTimes->{3.6868250653671703`*^9, 3.692451218276513*^9}],
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"{", 
+   RowBox[{"N", "\[Rule]", "45.`"}], "}"}], "}"}]], "Output",
+ CellChangeTimes->{3.686825065370265*^9, 3.6924512182859287`*^9},
+ Background->RGBColor[0.88, 1, 0.88]]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"Edin", "[", 
+   RowBox[{"\[Sigma]_", ",", "d_", ",", "N_"}], "]"}], ":=", 
+  RowBox[{
+   SuperscriptBox["\[Sigma]", "2"], 
+   RowBox[{"(", 
+    RowBox[{"1", "-", 
+     FractionBox[
+      RowBox[{"d", "+", "1"}], "N"]}], ")"}]}]}], "\[IndentingNewLine]", 
+ RowBox[{"Edin", "[", 
+  RowBox[{"0.1", ",", "8", ",", "10"}], "]"}], "\[IndentingNewLine]", 
+ RowBox[{"Edin", "[", 
+  RowBox[{"0.1", ",", "8", ",", "25"}], "]"}], "\[IndentingNewLine]", 
+ RowBox[{"Edin", "[", 
+  RowBox[{"0.1", ",", "8", ",", "100"}], "]"}], "\[IndentingNewLine]", 
+ RowBox[{"Edin", "[", 
+  RowBox[{"0.1", ",", "8", ",", "500"}], "]"}], "\[IndentingNewLine]", 
+ RowBox[{"Edin", "[", 
+  RowBox[{"0.1", ",", "8", ",", "1000"}], 
+  "]"}], "\[IndentingNewLine]"}], "Input",
+ CellChangeTimes->{{3.686897338961812*^9, 3.686897440265058*^9}}],
+
+Cell[BoxData["0.0010000000000000002`"], "Output",
+ CellChangeTimes->{3.686897441272792*^9, 3.6924512235322313`*^9}],
+
+Cell[BoxData["0.006400000000000001`"], "Output",
+ CellChangeTimes->{3.686897441272792*^9, 3.69245122353895*^9}],
+
+Cell[BoxData["0.009100000000000002`"], "Output",
+ CellChangeTimes->{3.686897441272792*^9, 3.692451223543599*^9},
+ Background->RGBColor[0.88, 1, 0.88]],
+
+Cell[BoxData["0.009820000000000002`"], "Output",
+ CellChangeTimes->{3.686897441272792*^9, 3.692451223548131*^9}],
+
+Cell[BoxData["0.009910000000000002`"], "Output",
+ CellChangeTimes->{3.686897441272792*^9, 3.692451223552668*^9}]
+}, Open  ]]
+},
+WindowSize->{953, 779},
+WindowMargins->{{28, Automatic}, {8, Automatic}},
+Magnification:>1.25 Inherited,
+FrontEndVersion->"10.3 for Mac OS X x86 (32-bit, 64-bit Kernel) (December 10, \
+2015)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 2535, 77, 268, "Text"],
+Cell[3096, 99, 876, 24, 133, "Text"],
+Cell[CellGroupData[{
+Cell[3997, 127, 564, 16, 96, "Input"],
+Cell[4564, 145, 547, 11, 50, "Message"],
+Cell[5114, 158, 210, 5, 69, "Output"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[5361, 168, 843, 21, 201, "Input"],
+Cell[6207, 191, 115, 1, 49, "Output"],
+Cell[6325, 194, 111, 1, 49, "Output"],
+Cell[6439, 197, 150, 2, 69, "Output"],
+Cell[6592, 201, 112, 1, 49, "Output"],
+Cell[6707, 204, 112, 1, 83, "Output"]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)

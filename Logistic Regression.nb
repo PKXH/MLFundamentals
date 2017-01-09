@@ -1,0 +1,938 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 10.3' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     40802,        929]
+NotebookOptionsPosition[     40081,        901]
+NotebookOutlinePosition[     40470,        918]
+CellTagsIndexPosition[     40427,        915]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[TextData[{
+ StyleBox["Logistic Regression",
+  FontWeight->"Bold"],
+ "\n\nLet\[CloseCurlyQuote]s take target function \[ScriptF] to be a 0/1 \
+probability so y is a deterministic function of \[DoubleStruckX] and create a \
+data set \[ScriptCapitalD] to try out logistic regression.\n\nWe\
+\[CloseCurlyQuote]ll take d = 2 and let \[ScriptCapitalX] = \
+[-1,1]\[Cross][-1,1] with uniform probability of picking each \
+\[DoubleStruckX] \[Element] \[ScriptCapitalX] , then choose a line in the \
+plane as the boundary between \[ScriptF](\[DoubleStruckX]) = 1 (where y has \
+to be +1) and \[ScriptF](\[DoubleStruckX]) = 0 (where y has to be -1) by \
+taking two random, uniformly distributed points from X and taking the line \
+passing through them as the boundary between y = \[PlusMinus]1. Then we\
+\[CloseCurlyQuote]ll pick N = 100 training points at random from \
+\[ScriptCapitalX], and evaluate the outputs ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["y", "n"], TraditionalForm]]],
+ " for each of these points ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["\[DoubleStruckX]", "n"], TraditionalForm]]],
+ ".\n\nThen let\[CloseCurlyQuote]s run logistic regression with stochastic \
+gradient descent to find g, and estimate ",
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["E", "out"], TraditionalForm]]],
+ " (the ",
+ StyleBox["cross entropy",
+  FontWeight->"Bold"],
+ " error) by generating a sufficiently large, separate set of points to \
+evaluate the error. We\[CloseCurlyQuote]ll then repeat the experiment for 100 \
+runs with different targets and take the average, initializing the weight \
+vector of Logistic Regression to all zeros in each run. \
+We\[CloseCurlyQuote]ll stop the algorithm when ",
+ Cell[BoxData[
+  FormBox[
+   RowBox[{"||", 
+    RowBox[{
+     SuperscriptBox["\[DoubleStruckW]", 
+      RowBox[{"(", 
+       RowBox[{"t", "-", "1"}], ")"}]], "-", 
+     SuperscriptBox["\[DoubleStruckW]", 
+      RowBox[{"(", "t", ")"}]]}], "||"}], TraditionalForm]]],
+ " < 0.01, where ",
+ Cell[BoxData[
+  FormBox[
+   SuperscriptBox["\[DoubleStruckW]", 
+    RowBox[{"(", "t", ")"}]], TraditionalForm]]],
+ " denotes the weight vector at the end of epoch t. We will use a learning \
+rate of 0.01."
+}], "Text",
+ CellChangeTimes->{{3.68687504963701*^9, 3.68687507773208*^9}, {
+  3.6868751096827374`*^9, 3.686875321178953*^9}, {3.686875352594746*^9, 
+  3.6868753893424063`*^9}, {3.6868754231268063`*^9, 3.686875593242248*^9}, {
+  3.686875623646736*^9, 3.686875635623292*^9}, {3.686882967687641*^9, 
+  3.6868829744830914`*^9}, {3.692452553834084*^9, 3.6924525654634037`*^9}, {
+  3.692452605974525*^9, 3.6924528297166452`*^9}},
+ Background->RGBColor[1, 0.9, 0.8]],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", " ", 
+   RowBox[{"Clear", " ", "globals"}], " ", "*)"}], "\[IndentingNewLine]", 
+  RowBox[{"Clear", "[", 
+   RowBox[{
+   "Generate\[ScriptCapitalX]", ",", "DoLogisticRegressionExperiment"}], 
+   "]"}]}]], "Input",
+ CellChangeTimes->{{3.686883299767745*^9, 3.686883337363063*^9}},
+ Background->GrayLevel[0.85]],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", " ", 
+   RowBox[{
+    RowBox[{"Generate", " ", "our", " ", "\[ScriptCapitalX]"}], "=", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"[", 
+       RowBox[{
+        RowBox[{"-", "1"}], ",", "1"}], "]"}], "\[Times]", 
+      RowBox[{"[", 
+       RowBox[{
+        RowBox[{"-", "1"}], ",", "1"}], "]"}], " ", "space", " ", "with", " ",
+       "\[ScriptD]", " ", "uniformly", " ", "distributed", " ", "points", " ",
+       "and", " ", "a", " ", "random", " ", "\[ScriptCapitalX]"}], "-", 
+     RowBox[{"partitioning", " ", "solution", " ", "function", " ", 
+      RowBox[{"\[ScriptF]", "."}]}]}]}], " ", "*)"}], "\[IndentingNewLine]", 
+  "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{
+    RowBox[{"Generate\[ScriptCapitalX]", "[", 
+     RowBox[{"OptionsPattern", "[", "]"}], "]"}], ":=", "\[IndentingNewLine]", 
+    RowBox[{"Module", "[", 
+     RowBox[{
+      RowBox[{"{", "\[IndentingNewLine]", 
+       RowBox[{"\[ScriptCapitalD]", ",", "\[ScriptF]", ",", 
+        RowBox[{"\[ScriptD]", "=", "2"}], ",", "\[IndentingNewLine]", "f1", 
+        ",", "f2", ",", " ", "\[IndentingNewLine]", "m", ",", "a", ",", "b", 
+        ",", "c", ",", "\[IndentingNewLine]", "t1", ",", "t2", ",", 
+        "\[IndentingNewLine]", "dotTest1", ",", " ", "dotTest2", ",", " ", 
+        "DotTest"}], "\[IndentingNewLine]", "}"}], ",", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"f1", "=", 
+        RowBox[{
+         RowBox[{"RandomReal", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"-", "1"}], ",", "1"}], "}"}], ",", 
+           RowBox[{"{", 
+            RowBox[{"1", ",", "\[ScriptD]"}], "}"}]}], "]"}], "[", 
+         RowBox[{"[", "1", "]"}], "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"f2", "=", 
+        RowBox[{
+         RowBox[{"RandomReal", "[", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{
+             RowBox[{"-", "1"}], ",", "1"}], "}"}], ",", 
+           RowBox[{"{", 
+            RowBox[{"1", ",", "\[ScriptD]"}], "}"}]}], "]"}], "[", 
+         RowBox[{"[", "1", "]"}], "]"}]}], ";", "\[IndentingNewLine]", 
+       "\[IndentingNewLine]", 
+       RowBox[{"m", " ", "=", " ", 
+        FractionBox[
+         RowBox[{
+          RowBox[{"f1", "[", 
+           RowBox[{"[", "2", "]"}], "]"}], "-", 
+          RowBox[{"f2", "[", 
+           RowBox[{"[", "2", "]"}], "]"}]}], 
+         RowBox[{
+          RowBox[{"f1", "[", 
+           RowBox[{"[", "1", "]"}], "]"}], "-", 
+          RowBox[{"f2", "[", 
+           RowBox[{"[", "1", "]"}], "]"}]}]]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"a", " ", "=", " ", 
+        RowBox[{"-", "m"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"b", " ", "=", " ", "1"}], ";", "\[IndentingNewLine]", 
+       RowBox[{"c", " ", "=", " ", 
+        RowBox[{
+         RowBox[{"m", " ", 
+          RowBox[{"f1", "[", 
+           RowBox[{"[", "1", "]"}], "]"}]}], "-", 
+         RowBox[{"f1", "[", 
+          RowBox[{"[", "2", "]"}], "]"}]}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"\[ScriptF]", "=", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"{", "c", "}"}], ",", 
+          RowBox[{"{", "a", "}"}], ",", 
+          RowBox[{"{", "b", "}"}]}], "}"}]}], ";", "\[IndentingNewLine]", 
+       "\[IndentingNewLine]", 
+       RowBox[{"(*", " ", 
+        RowBox[{
+        "f", " ", "should", " ", "not", " ", "dot", " ", "to", " ", "zero", 
+         " ", "for", " ", "our", " ", "two", " ", "original", " ", 
+         RowBox[{"points", "!"}]}], " ", "*)"}], "\[IndentingNewLine]", 
+       RowBox[{"t1", "=", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", 
+          RowBox[{"f1", "[", 
+           RowBox[{"[", "1", "]"}], "]"}], ",", 
+          RowBox[{"f1", "[", 
+           RowBox[{"[", "2", "]"}], "]"}]}], "}"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"t2", "=", 
+        RowBox[{"{", 
+         RowBox[{"1", ",", 
+          RowBox[{"f2", "[", 
+           RowBox[{"[", "1", "]"}], "]"}], ",", 
+          RowBox[{"f2", "[", 
+           RowBox[{"[", "2", "]"}], "]"}]}], "}"}]}], ";", 
+       "\[IndentingNewLine]", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"DotTest", "[", 
+         RowBox[{"v_", ",", "s_"}], "]"}], ":=", 
+        RowBox[{"If", "[", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"Abs", "[", "v", "]"}], ">", "0.00000000001"}], ",", 
+          RowBox[{"Throw", "[", "s", "]"}], ",", " ", "0"}], "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"DotTest", "[", 
+        RowBox[{
+         RowBox[{"t1", ".", "\[ScriptF]"}], ",", " ", 
+         "\"\<t1 dot test failed\>\""}], "]"}], ";", "\[IndentingNewLine]", 
+       RowBox[{"DotTest", "[", 
+        RowBox[{
+         RowBox[{"t2", ".", "\[ScriptF]"}], ",", " ", 
+         "\"\<t2 dot test failed\>\""}], "]"}], ";", "\[IndentingNewLine]", 
+       "\[IndentingNewLine]", 
+       RowBox[{"\[ScriptCapitalD]", " ", "=", " ", 
+        RowBox[{"RandomReal", "[", 
+         RowBox[{
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"-", "1"}], ",", "1"}], "}"}], ",", 
+          RowBox[{"{", 
+           RowBox[{
+            RowBox[{"OptionValue", "[", "\[ScriptCapitalD]Size", "]"}], ",", 
+            "\[ScriptD]"}], "}"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+       "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{"\[ScriptCapitalD]", ",", " ", "\[ScriptF]"}], "}"}]}]}], 
+     "\[IndentingNewLine]", "]"}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Options", "[", "Generate\[ScriptCapitalX]", "]"}], "=", 
+     RowBox[{"{", 
+      RowBox[{"\[ScriptCapitalD]Size", "\[Rule]", "100"}], "}"}]}], ";"}], 
+   "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{"(*", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"LinearTarget", "[", 
+       RowBox[{"\[ScriptF]_", ",", "\[DoubleStruckCapitalX]_"}], "]"}], ":=", 
+      
+      RowBox[{"Sign", "[", 
+       RowBox[{"\[DoubleStruckCapitalX]", ".", "\[ScriptF]"}], "]"}]}], ";", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"NoFeature", "[", "\[DoubleStruckCapitalX]_", "]"}], ":=", 
+      "\[DoubleStruckCapitalX]"}], ";", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"RiskNoiseFlip", "[", "percent_", "]"}], ":=", 
+      RowBox[{"If", "[", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"RandomReal", "[", "]"}], "\[LessEqual]", 
+         FractionBox["percent", "100"]}], ",", 
+        RowBox[{"-", "1"}], ",", "1"}], "]"}]}], ";"}], "\[IndentingNewLine]",
+     "*)"}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{"DoLogisticRegressionExperiment", "[", 
+     RowBox[{"\[ScriptCapitalX]_", ",", 
+      RowBox[{"OptionsPattern", "[", "]"}]}], "]"}], ":=", 
+    "\[IndentingNewLine]", 
+    RowBox[{"Module", "[", 
+     RowBox[{
+      RowBox[{"{", "\[IndentingNewLine]", 
+       RowBox[{
+       "\[ScriptCapitalD]", ",", "\[ScriptF]", ",", "\[DoubleStruckY]", ",", 
+        "\[IndentingNewLine]", "\[DoubleStruckCapitalX]", ",", 
+        RowBox[{"(*", 
+         RowBox[{
+         "\[DoubleStruckCapitalX]f", ",", "\[DoubleStruckCapitalX]fdag", 
+          ","}], "*)"}], "\[IndentingNewLine]", "\[DoubleStruckW]", ",", 
+        "\[DoubleStruckW]Prev", ",", "\[DoubleStruckX]", ",", "y", ",", "t", 
+        ",", "\[Eta]", ",", "\[IndentingNewLine]", "sgdSamples", ",", 
+        "\[IndentingNewLine]", "Ee", ",", "gradE", ",", "\[IndentingNewLine]",
+         "epoch", ",", "maxEpoch", ",", "tDist", ",", "\[IndentingNewLine]", 
+        "tst"}], "\[IndentingNewLine]", "}"}], ",", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"\[ScriptCapitalD]", ",", "\[ScriptF]"}], "}"}], "=", 
+        "\[ScriptCapitalX]"}], ";", "\[IndentingNewLine]", 
+       RowBox[{"(*", "\[IndentingNewLine]", 
+        RowBox[{
+         RowBox[{"\[DoubleStruckCapitalX]", "=", " ", 
+          RowBox[{
+           RowBox[{"Function", "[", 
+            RowBox[{"x", ",", 
+             RowBox[{"Prepend", "[", 
+              RowBox[{"x", ",", "1"}], "]"}]}], "]"}], "/@", 
+           "\[ScriptCapitalD]"}]}], ";", "\[IndentingNewLine]", 
+         RowBox[{"\[DoubleStruckCapitalX]f", "=", 
+          RowBox[{
+           RowBox[{"OptionValue", "[", "DataFeature", "]"}], "[", 
+           "\[DoubleStruckCapitalX]", "]"}]}], ";", "\[IndentingNewLine]", 
+         RowBox[{"\[DoubleStruckY]", "=", 
+          RowBox[{
+           RowBox[{"RiskNoiseFlip", "[", 
+            RowBox[{"OptionValue", "[", "Noise", "]"}], "]"}], "*", 
+           RowBox[{
+            RowBox[{"OptionValue", "[", "TargetFunction", "]"}], "[", 
+            RowBox[{"\[ScriptF]", ",", "\[DoubleStruckCapitalX]"}], "]"}]}]}],
+          ";"}], "\[IndentingNewLine]", "*)"}], "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"gradE", "[", 
+         RowBox[{"\[DoubleStruckW]_", ",", "\[DoubleStruckX]_", ",", "y_"}], 
+         "]"}], ":=", 
+        FractionBox[
+         RowBox[{
+          RowBox[{"-", "y"}], " ", "\[DoubleStruckX]"}], 
+         RowBox[{"1", "+", 
+          SuperscriptBox["\[ExponentialE]", 
+           RowBox[{"y", " ", 
+            RowBox[{
+             RowBox[{"(", 
+              RowBox[{
+               SuperscriptBox["\[DoubleStruckW]", "\[Transpose]"], ".", 
+               "\[DoubleStruckX]"}], ")"}], "[", 
+             RowBox[{"[", 
+              RowBox[{"1", ",", "1"}], "]"}], "]"}]}]]}]]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"\[Eta]", "=", 
+        RowBox[{"OptionValue", "[", "LearningRate", "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"maxEpoch", "=", 
+        RowBox[{"OptionValue", "[", "MaxEpoch", "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"tDist", "=", 
+        RowBox[{"OptionValue", "[", "TDist", "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"\[DoubleStruckW]", "=", 
+        RowBox[{"OptionValue", "[", "\[DoubleStruckW]0", "]"}]}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"\[DoubleStruckW]Prev", "=", 
+        RowBox[{"\[DoubleStruckW]", "+", 
+         RowBox[{"2", "tDist"}]}]}], ";", "\[IndentingNewLine]", 
+       "\[IndentingNewLine]", 
+       RowBox[{"(*", " ", 
+        RowBox[{
+         RowBox[{"\[DoubleStruckCapitalX]", " ", "is", " ", "the", " ", "1"}],
+          "-", 
+         RowBox[{
+         "prepended", " ", "version", " ", "of", " ", "\[ScriptCapitalD]", 
+          " ", "to", " ", "be", " ", "used", " ", "for", " ", 
+          "regression"}]}], " ", "*)"}], " ", 
+       RowBox[{"(*", " ", 
+        RowBox[{
+        "\[DoubleStruckY]", " ", "is", " ", "the", " ", "vector", " ", "of", 
+         " ", "labels", " ", "to", " ", "be", " ", "used", " ", "for", " ", 
+         "regression"}], " ", "*)"}], "\[IndentingNewLine]", 
+       RowBox[{"\[DoubleStruckCapitalX]", "=", 
+        RowBox[{
+         RowBox[{"Function", "[", 
+          RowBox[{"x", ",", 
+           RowBox[{"Prepend", "[", 
+            RowBox[{"x", ",", "1"}], "]"}]}], "]"}], "/@", 
+         "\[ScriptCapitalD]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{
+         RowBox[{"\[DoubleStruckY]", "=", 
+          FractionBox[
+           SuperscriptBox["\[ExponentialE]", 
+            RowBox[{"Sign", "[", 
+             RowBox[{"\[DoubleStruckCapitalX]", ".", "\[ScriptF]"}], "]"}]], 
+           RowBox[{"1", "+", 
+            SuperscriptBox["\[ExponentialE]", 
+             RowBox[{"Sign", "[", 
+              RowBox[{"\[DoubleStruckCapitalX]", ".", "\[ScriptF]"}], 
+              "]"}]]}]]}], ";"}], "*)"}], "\[IndentingNewLine]", 
+       RowBox[{"\[DoubleStruckY]", "=", 
+        RowBox[{"Sign", "[", 
+         RowBox[{"\[DoubleStruckCapitalX]", ".", "\[ScriptF]"}], "]"}]}], ";",
+        "\[IndentingNewLine]", 
+       RowBox[{"(*", 
+        RowBox[{
+         RowBox[{"\[DoubleStruckY]", "=", 
+          RowBox[{"Map", "[", 
+           RowBox[{
+            RowBox[{
+             RowBox[{"(", 
+              RowBox[{"If", "[", 
+               RowBox[{
+                RowBox[{"#", "<", "0"}], ",", "0", ",", "#"}], "]"}], ")"}], 
+             "&"}], ",", "\[DoubleStruckY]", ",", 
+            RowBox[{"{", "2", "}"}]}], "]"}]}], ";"}], "*)"}], " ", 
+       RowBox[{"(*", " ", 
+        RowBox[{"turn", " ", 
+         RowBox[{"1", "/", 
+          RowBox[{"-", "1"}]}], " ", "elems", " ", "to", " ", 
+         RowBox[{"1", "/", "0"}]}], " ", "*)"}], "\[IndentingNewLine]", 
+       "\[IndentingNewLine]", 
+       RowBox[{"For", "[", 
+        RowBox[{
+         RowBox[{"epoch", "=", "1"}], ",", 
+         RowBox[{
+          RowBox[{"epoch", "\[LessEqual]", "maxEpoch"}], "\[And]", 
+          RowBox[{
+           RowBox[{"Norm", "[", 
+            RowBox[{"\[DoubleStruckW]Prev", "-", "\[DoubleStruckW]"}], "]"}], 
+           "\[GreaterEqual]", "tDist"}]}], ",", 
+         RowBox[{"epoch", "++"}], ",", 
+         RowBox[{"(", "\[IndentingNewLine]", 
+          RowBox[{"(*", " ", 
+           RowBox[{
+           "generate", " ", "Stochastic", " ", "Gradient", " ", "Descent", 
+            " ", "sample", " ", "order", "\[IndentingNewLine]", "for", " ", 
+            "this", " ", "entire", " ", "epoch", " ", "and", " ", "keep", " ",
+             "track", " ", "of", " ", "the", " ", "previous", " ", 
+            "\[DoubleStruckW]", " ", "so", " ", "that", " ", "we", " ", "can",
+             " ", "check", " ", "progress", " ", "at", " ", "the", " ", "end",
+             " ", "of", " ", "the", " ", "epoch"}], " ", "*)"}], 
+          "\[IndentingNewLine]", 
+          RowBox[{
+           RowBox[{"\[DoubleStruckW]Prev", "=", "\[DoubleStruckW]"}], ";", 
+           "\[IndentingNewLine]", 
+           RowBox[{"sgdSamples", "=", 
+            RowBox[{"Permute", "[", 
+             RowBox[{
+              RowBox[{"Range", "[", 
+               RowBox[{"1", ",", 
+                RowBox[{"Length", "[", "\[ScriptCapitalD]", "]"}]}], "]"}], 
+              ",", 
+              RowBox[{"RandomPermutation", "[", 
+               RowBox[{"Length", "[", "\[ScriptCapitalD]", "]"}], "]"}]}], 
+             "]"}]}], ";", "\[IndentingNewLine]", 
+           RowBox[{"tst", "=", 
+            RowBox[{"Length", "[", "sgdSamples", "]"}]}], ";", 
+           "\[IndentingNewLine]", 
+           RowBox[{"For", "[", 
+            RowBox[{
+             RowBox[{"t", "=", "1"}], ",", 
+             RowBox[{"t", "\[LessEqual]", 
+              RowBox[{"Length", "[", "\[ScriptCapitalD]", "]"}]}], ",", 
+             RowBox[{"t", "++"}], ",", 
+             RowBox[{"(", "\[IndentingNewLine]", 
+              RowBox[{
+               RowBox[{"\[DoubleStruckX]", "=", 
+                SuperscriptBox[
+                 RowBox[{"{", 
+                  RowBox[{"\[DoubleStruckCapitalX]", "[", 
+                   RowBox[{"[", 
+                    RowBox[{"sgdSamples", "[", 
+                    RowBox[{"[", "t", "]"}], "]"}], "]"}], "]"}], "}"}], 
+                 "\[Transpose]"]}], ";", "\[IndentingNewLine]", 
+               RowBox[{"y", "=", 
+                RowBox[{"\[DoubleStruckY]", "[", 
+                 RowBox[{"[", 
+                  RowBox[{
+                   RowBox[{"sgdSamples", "[", 
+                    RowBox[{"[", "t", "]"}], "]"}], ",", "1"}], "]"}], 
+                 "]"}]}], ";", "\[IndentingNewLine]", 
+               RowBox[{"\[DoubleStruckW]", "=", 
+                RowBox[{"\[DoubleStruckW]", "-", 
+                 RowBox[{"\[Eta]", " ", 
+                  RowBox[{"gradE", "[", 
+                   RowBox[{
+                   "\[DoubleStruckW]", ",", "\[DoubleStruckX]", ",", "y"}], 
+                   "]"}]}]}]}], ";"}], "\[IndentingNewLine]", ")"}]}], "]"}], 
+           ";"}], "\[IndentingNewLine]", ")"}]}], "]"}], ";", 
+       "\[IndentingNewLine]", 
+       RowBox[{"{", 
+        RowBox[{
+        "\[DoubleStruckW]", ",", "\[DoubleStruckCapitalX]", ",", 
+         "\[DoubleStruckY]", ",", "\[ScriptCapitalD]", ",", "\[ScriptF]", ",",
+          "epoch", ",", 
+         RowBox[{"Norm", "[", 
+          RowBox[{"\[DoubleStruckW]Prev", "-", "\[DoubleStruckW]"}], "]"}]}], 
+        "}"}]}]}], "\[IndentingNewLine]", "]"}]}], "\[IndentingNewLine]", 
+   RowBox[{
+    RowBox[{
+     RowBox[{"Options", "[", "DoLogisticRegressionExperiment", "]"}], "=", 
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"MaxEpoch", "\[Rule]", "10000"}], ",", 
+       RowBox[{"TDist", "\[Rule]", "0.01"}], ",", 
+       RowBox[{"LearningRate", "\[Rule]", "0.01"}], ",", 
+       RowBox[{"\[DoubleStruckW]0", "\[Rule]", 
+        RowBox[{"{", 
+         RowBox[{
+          RowBox[{"{", "0", "}"}], ",", 
+          RowBox[{"{", "0", "}"}], ",", 
+          RowBox[{"{", "0", "}"}]}], "}"}]}]}], "}"}]}], ";"}], 
+   "\[IndentingNewLine]"}]}]], "Input",
+ CellChangeTimes->{{3.686877561407528*^9, 3.686877605426909*^9}, {
+   3.686877903918746*^9, 3.686877917846118*^9}, {3.686878077749419*^9, 
+   3.6868781131264544`*^9}, {3.6868792209157257`*^9, 3.686879310896472*^9}, {
+   3.686879353877933*^9, 3.686879383950004*^9}, {3.686879425603117*^9, 
+   3.686879494183056*^9}, {3.6868796795537767`*^9, 3.686879721838777*^9}, {
+   3.686880635424592*^9, 3.686880925725605*^9}, {3.686880976812681*^9, 
+   3.686881165538924*^9}, {3.68688120592159*^9, 3.6868812294745073`*^9}, {
+   3.68688129324575*^9, 3.6868813959300327`*^9}, {3.68688145181679*^9, 
+   3.686881534060419*^9}, {3.6868815726047373`*^9, 3.68688165109568*^9}, {
+   3.686881751501233*^9, 3.686881906286133*^9}, {3.6868820957265882`*^9, 
+   3.6868821338536787`*^9}, {3.686882202619874*^9, 3.686882204817439*^9}, {
+   3.68688224173603*^9, 3.6868823536448393`*^9}, {3.6868824961279573`*^9, 
+   3.686882568299444*^9}, {3.686882717648093*^9, 3.686882781961934*^9}, {
+   3.6868838007290916`*^9, 3.686884043977599*^9}, {3.686884112913219*^9, 
+   3.686884115005375*^9}, 3.686885001362809*^9, {3.68688522954573*^9, 
+   3.686885292399084*^9}, {3.6868853257760773`*^9, 3.6868853348693533`*^9}, {
+   3.686886207610628*^9, 3.6868862195505257`*^9}, {3.6868863546934023`*^9, 
+   3.686886360492372*^9}, {3.686886491489052*^9, 3.6868865128132267`*^9}, {
+   3.6868866442257757`*^9, 3.6868866474491663`*^9}, {3.686886742233354*^9, 
+   3.686886768907702*^9}, {3.686886839977784*^9, 3.686886858672126*^9}, {
+   3.6868869086946793`*^9, 3.686886916037134*^9}, {3.686887209536192*^9, 
+   3.686887251584391*^9}, {3.686887582954756*^9, 3.68688758813027*^9}, {
+   3.686887677879654*^9, 3.686887704725338*^9}, {3.686887739694386*^9, 
+   3.686887740756763*^9}, {3.686888000690854*^9, 3.68688801149745*^9}, {
+   3.686888165043058*^9, 3.686888174018702*^9}, {3.686888244457141*^9, 
+   3.686888244791819*^9}, {3.6868884844471292`*^9, 3.686888515013665*^9}, {
+   3.686888676575306*^9, 3.686888677746543*^9}, {3.6868887700417013`*^9, 
+   3.686888776466181*^9}, {3.686888967915453*^9, 3.6868889686174192`*^9}, {
+   3.6868890233535*^9, 3.686889024167263*^9}, {3.686889106494083*^9, 
+   3.686889136091805*^9}, {3.6868893189492807`*^9, 3.686889323427202*^9}, {
+   3.686889515267496*^9, 3.686889516787348*^9}, {3.6868895562031612`*^9, 
+   3.686889558951153*^9}, {3.686889755442998*^9, 3.686889791758522*^9}, {
+   3.686889868245854*^9, 3.68688990078957*^9}, {3.686890010906567*^9, 
+   3.686890020332469*^9}, {3.6868900757918*^9, 3.686890090534289*^9}, {
+   3.686890135444242*^9, 3.686890139442993*^9}, 3.6868905899799747`*^9, {
+   3.68689089168694*^9, 3.68689089893223*^9}, {3.686891118595975*^9, 
+   3.6868911235690203`*^9}, {3.686891162363083*^9, 3.686891171138082*^9}, {
+   3.686891349987053*^9, 3.6868913588658953`*^9}, {3.686891814376705*^9, 
+   3.6868918330954103`*^9}, {3.68689196319425*^9, 3.686891981569324*^9}, {
+   3.6868920164484873`*^9, 3.686892074085484*^9}, {3.686894436708765*^9, 
+   3.686894439517465*^9}, 3.686894630236471*^9, 3.686895683778537*^9}],
+
+Cell[TextData[{
+ Cell[BoxData[
+  FormBox[
+   SubscriptBox["E", "out"], TraditionalForm]],
+  FormatType->"TraditionalForm",
+  FontWeight->"Bold"],
+ StyleBox[" for N = 100",
+  FontWeight->"Bold"]
+}], "Text",
+ CellChangeTimes->{{3.686875661300753*^9, 3.6868756967379827`*^9}, {
+  3.686875728456616*^9, 3.686875730268896*^9}, {3.692453029726035*^9, 
+  3.692453066785161*^9}},
+ Background->RGBColor[0.94, 0.91, 0.88]],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", " ", 
+   RowBox[{"Clear", " ", "globals"}], " ", "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{"Clear", "[", "DoLRs", "]"}], "\[IndentingNewLine]", 
+   RowBox[{"Clear", "[", 
+    RowBox[{
+    "lrs\[ScriptF]s", ",", "lrs\[DoubleStruckG]s", ",", 
+     "lrs\[ScriptCapitalD]", ",", 
+     RowBox[{"(*", 
+      RowBox[{"lrsAvEin", ","}], "*)"}], "lrsRuns", ",", "lrsN", ",", 
+     "lrsEpochs", ",", "lrsTDists"}], "]"}]}]}]], "Input",
+ CellChangeTimes->{{3.686884815058193*^9, 3.686884844902474*^9}, {
+  3.686885442625634*^9, 3.686885445870677*^9}, {3.686885619314486*^9, 
+  3.686885626359235*^9}},
+ Background->GrayLevel[0.85]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"DoLRs", "[", "]"}], ":=", "\[IndentingNewLine]", 
+   RowBox[{"Module", "[", 
+    RowBox[{
+     RowBox[{"{", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"runs", "=", "100"}], ",", 
+       RowBox[{"N", "=", "100"}], ",", "\[IndentingNewLine]", 
+       "\[DoubleStruckG]", ",", "\[DoubleStruckG]s", ",", 
+       "\[IndentingNewLine]", "\[DoubleStruckY]", ",", "\[DoubleStruckY]s", 
+       ",", "\[IndentingNewLine]", "\[DoubleStruckCapitalX]", ",", 
+       "\[DoubleStruckCapitalX]s", ",", "\[IndentingNewLine]", "\[ScriptF]", 
+       ",", "\[ScriptF]s", ",", "\[IndentingNewLine]", "\[ScriptCapitalD]", 
+       ",", "\[IndentingNewLine]", "avEin", ",", "\[IndentingNewLine]", "i", 
+       ",", "n", ",", "\[IndentingNewLine]", "epoch", ",", "epochs", ",", 
+       "\[IndentingNewLine]", "tDist", ",", "tDists"}], "\[IndentingNewLine]",
+       "}"}], ",", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"\[ScriptF]s", "=", 
+       RowBox[{"{", "}"}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{"\[DoubleStruckG]s", "=", 
+       RowBox[{"{", "}"}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{"\[DoubleStruckY]s", "=", 
+       RowBox[{"{", "}"}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{"\[DoubleStruckCapitalX]s", "=", 
+       RowBox[{"{", "}"}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{"epochs", "=", 
+       RowBox[{"{", "}"}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{"tDists", "=", 
+       RowBox[{"{", "}"}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{"For", "[", 
+       RowBox[{
+        RowBox[{"i", "=", "1"}], ",", 
+        RowBox[{"i", "\[LessEqual]", "runs"}], ",", 
+        RowBox[{"i", "++"}], ",", 
+        RowBox[{"(", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{
+            "\[DoubleStruckG]", ",", "\[DoubleStruckCapitalX]", ",", 
+             "\[DoubleStruckY]", ",", "\[ScriptCapitalD]", ",", "\[ScriptF]", 
+             ",", "epoch", ",", "tDist"}], "}"}], "=", 
+           RowBox[{"DoLogisticRegressionExperiment", "[", 
+            RowBox[{"Generate\[ScriptCapitalX]", "[", 
+             RowBox[{"\[ScriptCapitalD]Size", "\[Rule]", "N"}], "]"}], 
+            "]"}]}], ";", "\[IndentingNewLine]", 
+          RowBox[{"AppendTo", "[", 
+           RowBox[{"\[ScriptF]s", ",", "\[ScriptF]"}], "]"}], ";", 
+          "\[IndentingNewLine]", 
+          RowBox[{"AppendTo", "[", 
+           RowBox[{"\[DoubleStruckG]s", ",", "\[DoubleStruckG]"}], "]"}], ";",
+           "\[IndentingNewLine]", 
+          RowBox[{"AppendTo", "[", 
+           RowBox[{"\[DoubleStruckY]s", ",", "\[DoubleStruckY]"}], "]"}], ";",
+           "\[IndentingNewLine]", 
+          RowBox[{"AppendTo", "[", 
+           RowBox[{
+           "\[DoubleStruckCapitalX]s", ",", "\[DoubleStruckCapitalX]"}], 
+           "]"}], ";", "\[IndentingNewLine]", 
+          RowBox[{"AppendTo", "[", 
+           RowBox[{"epochs", ",", "epoch"}], "]"}], ";", 
+          "\[IndentingNewLine]", 
+          RowBox[{"AppendTo", "[", 
+           RowBox[{"tDists", ",", "tDist"}], "]"}], ";"}], 
+         "\[IndentingNewLine]", ")"}]}], "]"}], ";", "\[IndentingNewLine]", 
+      RowBox[{"(*", 
+       RowBox[{
+        RowBox[{"avEin", "=", 
+         RowBox[{"Mean", "[", 
+          RowBox[{"MapThread", "[", 
+           RowBox[{
+            RowBox[{"Function", "[", 
+             RowBox[{
+              RowBox[{"{", 
+               RowBox[{"x", ",", "y", ",", "z"}], "}"}], ",", 
+              RowBox[{"ClassificationEin", "[", 
+               RowBox[{"x", ",", "y", ",", "z"}], "]"}]}], "]"}], ",", 
+            RowBox[{"{", 
+             RowBox[{
+             "\[DoubleStruckCapitalX]s", ",", "\[DoubleStruckG]s", ",", 
+              "\[DoubleStruckY]s"}], "}"}]}], "]"}], "]"}]}], ";"}], "*)"}], 
+      "\[IndentingNewLine]", 
+      RowBox[{"n", "=", 
+       RowBox[{"Length", "[", "\[ScriptCapitalD]", "]"}]}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"{", 
+       RowBox[{
+       "\[ScriptF]s", ",", "\[DoubleStruckG]s", ",", "\[ScriptCapitalD]", ",", 
+        RowBox[{"(*", 
+         RowBox[{"avEin", ","}], "*)"}], "runs", ",", "n", ",", "epochs", ",",
+         "tDists"}], "}"}]}]}], "\[IndentingNewLine]", "]"}]}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+    "lrs\[ScriptF]s", ",", "lrs\[DoubleStruckG]s", ",", 
+     "lrs\[ScriptCapitalD]", ",", 
+     RowBox[{"(*", 
+      RowBox[{"lrsAvEin", ","}], "*)"}], "lrsRuns", ",", "lrsN", ",", 
+     "lrsEpochs", ",", "lrsTDists"}], "}"}], "=", 
+   RowBox[{"DoLRs", "[", "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{"StringForm", "[", 
+  RowBox[{
+  "\"\<Logistic regression runs complete (runs=``, N=``, ave. epochs=``, ave. \
+t-distance=``).\>\"", ",", "lrsRuns", ",", "lrsN", ",", 
+   RowBox[{
+    RowBox[{"Mean", "[", "lrsEpochs", "]"}], "\[Times]", "1."}], ",", 
+   RowBox[{"Mean", "[", "lrsTDists", "]"}]}], "]"}]}], "Input",
+ CellChangeTimes->{{3.686884459488489*^9, 3.686884498653212*^9}, {
+   3.686884561525461*^9, 3.686884590721366*^9}, {3.686884650649694*^9, 
+   3.686884789240923*^9}, {3.6868854332076902`*^9, 3.686885437495656*^9}, {
+   3.686885483662355*^9, 3.6868856078652773`*^9}, 3.686885645960226*^9, {
+   3.686885931421139*^9, 3.686885992145095*^9}, {3.686892220973054*^9, 
+   3.686892227892308*^9}, {3.686892412150634*^9, 3.6868924288211517`*^9}, {
+   3.686892965897039*^9, 3.686892974527708*^9}, {3.6868936335665903`*^9, 
+   3.686893634468047*^9}, {3.686894606829836*^9, 3.686894608069097*^9}, {
+   3.686895679803384*^9, 3.686895680641642*^9}}],
+
+Cell[BoxData[
+ InterpretationBox["\<\"Logistic regression runs complete \
+(runs=\\!\\(\\*RowBox[{\\\"100\\\"}]\\), N=\\!\\(\\*RowBox[{\\\"100\\\"}]\\), \
+ave. epochs=\\!\\(\\*RowBox[{\\\"344.35`\\\"}]\\), ave. \
+t-distance=\\!\\(\\*RowBox[{\\\"0.009987253724137581`\\\"}]\\)).\"\>",
+  StringForm[
+  "Logistic regression runs complete (runs=``, N=``, ave. epochs=``, ave. \
+t-distance=``).", 100, 100, 344.35, 0.009987253724137581],
+  Editable->False]], "Output",
+ CellChangeTimes->{3.6868903675037003`*^9, 3.68689064141405*^9, 
+  3.6868906866043873`*^9, 3.686890778402561*^9, 3.686891093110338*^9, 
+  3.686891330786271*^9, 3.686891378385928*^9, 3.686891797697102*^9, 
+  3.6868919370940523`*^9, 3.686892124002596*^9, 3.686892173385909*^9, 
+  3.6868922799918957`*^9, 3.6868926312078943`*^9, 3.6868930160144672`*^9, 
+  3.686894584078362*^9, 3.686895657129195*^9, 3.686895829880682*^9, 
+  3.692453116578566*^9, 3.692453294429873*^9}]
+}, Open  ]],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", " ", 
+   RowBox[{"clear", " ", "globals"}], " ", "*)"}], "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{"Clear", "[", "Experiment1", "]"}], "\[IndentingNewLine]", 
+   RowBox[{"Clear", "[", 
+    RowBox[{
+    "e1\[ScriptF]s", ",", "e1\[DoubleStruckG]s", ",", "e1runs", ",", "n", ",",
+      "lastEpoch", ",", "tDist"}], "]"}]}]}]], "Input",
+ CellChangeTimes->{{3.6848562966738873`*^9, 3.684856299280107*^9}, {
+   3.684858985116835*^9, 3.6848590008998423`*^9}, {3.684859032620492*^9, 
+   3.684859053193077*^9}, {3.6848607168373003`*^9, 3.6848607229231462`*^9}, {
+   3.6868841704827757`*^9, 3.686884239615068*^9}, 3.69245332087751*^9, {
+   3.692453419490529*^9, 3.692453443897422*^9}},
+ Background->GrayLevel[0.85]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"RegressionEin", "[", 
+    RowBox[{
+    "\[DoubleStruckCapitalX]_", ",", "\[DoubleStruckW]_", ",", 
+     "\[DoubleStruckY]_", ",", 
+     RowBox[{"OptionsPattern", "[", "]"}]}], "]"}], ":=", 
+   "\[IndentingNewLine]", 
+   RowBox[{"Module", "[", 
+    RowBox[{
+     RowBox[{"{", "\[IndentingNewLine]", 
+      RowBox[{"N", ",", "n"}], "\[IndentingNewLine]", "}"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"N", "=", 
+       RowBox[{"Length", "[", "\[DoubleStruckY]", "]"}]}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{
+       FractionBox["1", "N"], 
+       RowBox[{"(", 
+        RowBox[{
+         UnderoverscriptBox["\[Sum]", 
+          RowBox[{"n", "=", "1"}], "N"], 
+         RowBox[{"Log", "[", 
+          RowBox[{"1", "+", 
+           SuperscriptBox["\[ExponentialE]", 
+            RowBox[{
+             RowBox[{"-", 
+              RowBox[{"\[DoubleStruckY]", "[", 
+               RowBox[{"[", "n", "]"}], "]"}]}], 
+             RowBox[{
+              RowBox[{"(", 
+               RowBox[{
+                SuperscriptBox["\[DoubleStruckW]", "\[Transpose]"], ".", 
+                SuperscriptBox[
+                 RowBox[{"{", 
+                  RowBox[{"\[DoubleStruckCapitalX]", "[", 
+                   RowBox[{"[", "n", "]"}], "]"}], "}"}], "\[Transpose]"]}], 
+               ")"}], "[", 
+              RowBox[{"[", 
+               RowBox[{"1", ",", "1"}], "]"}], "]"}]}]]}], "]"}]}], 
+        ")"}]}]}]}], "\[IndentingNewLine]", "]"}]}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"DoEoutTest", "[", 
+    RowBox[{"\[ScriptF]s_", ",", "\[DoubleStruckG]s_"}], "]"}], ":=", 
+   "\[IndentingNewLine]", 
+   RowBox[{"Module", "[", 
+    RowBox[{
+     RowBox[{"{", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"runs", "=", "100"}], ",", 
+       RowBox[{"N", "=", "100"}], ",", "\[IndentingNewLine]", 
+       "\[DoubleStruckG]", ",", "\[IndentingNewLine]", "\[DoubleStruckY]", 
+       ",", "\[DoubleStruckY]s", ",", "\[IndentingNewLine]", 
+       "\[DoubleStruckCapitalX]", ",", "\[DoubleStruckCapitalX]s", ",", 
+       "\[IndentingNewLine]", "\[ScriptF]", ",", "\[IndentingNewLine]", 
+       "\[ScriptCapitalD]", ",", "\[IndentingNewLine]", "avEout", ",", 
+       "\[IndentingNewLine]", "i", ",", "\[IndentingNewLine]", "epoch", ",", 
+       "tDist"}], "\[IndentingNewLine]", "}"}], ",", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"\[DoubleStruckY]s", "=", 
+       RowBox[{"{", "}"}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{"\[DoubleStruckCapitalX]s", "=", 
+       RowBox[{"{", "}"}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{"For", "[", 
+       RowBox[{
+        RowBox[{"i", "=", "1"}], ",", 
+        RowBox[{"i", "\[LessEqual]", "runs"}], ",", 
+        RowBox[{"i", "++"}], ",", 
+        RowBox[{"(", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{
+            "\[DoubleStruckG]", ",", "\[DoubleStruckCapitalX]", ",", 
+             "\[DoubleStruckY]", ",", "\[ScriptCapitalD]", ",", "\[ScriptF]", 
+             ",", "epoch", ",", "tDist"}], "}"}], "=", 
+           RowBox[{"DoLogisticRegressionExperiment", "[", 
+            RowBox[{"{", 
+             RowBox[{
+              RowBox[{
+               RowBox[{"Generate\[ScriptCapitalX]", "[", 
+                RowBox[{"\[ScriptCapitalD]Size", "\[Rule]", "N"}], "]"}], "[", 
+               RowBox[{"[", "1", "]"}], "]"}], ",", 
+              RowBox[{"\[ScriptF]s", "[", 
+               RowBox[{"[", "i", "]"}], "]"}]}], "}"}], "]"}]}], ";", 
+          "\[IndentingNewLine]", 
+          RowBox[{"AppendTo", "[", 
+           RowBox[{"\[DoubleStruckY]s", ",", "\[DoubleStruckY]"}], "]"}], ";",
+           "\[IndentingNewLine]", 
+          RowBox[{"AppendTo", "[", 
+           RowBox[{
+           "\[DoubleStruckCapitalX]s", ",", "\[DoubleStruckCapitalX]"}], 
+           "]"}], ";"}], "\[IndentingNewLine]", ")"}]}], "]"}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"avEout", "=", 
+       RowBox[{"Mean", "[", 
+        RowBox[{"MapThread", "[", 
+         RowBox[{
+          RowBox[{"Function", "[", 
+           RowBox[{
+            RowBox[{"{", 
+             RowBox[{"x", ",", "y", ",", "z"}], "}"}], ",", 
+            RowBox[{"RegressionEin", "[", 
+             RowBox[{"x", ",", "y", ",", "z"}], "]"}]}], "]"}], ",", 
+          RowBox[{"{", 
+           RowBox[{
+           "\[DoubleStruckCapitalX]s", ",", "\[DoubleStruckG]s", ",", 
+            "\[DoubleStruckY]s"}], "}"}]}], "]"}], "]"}]}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"n", "=", 
+       RowBox[{"Length", "[", "\[ScriptCapitalD]", "]"}]}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"{", 
+       RowBox[{
+       "\[ScriptF]s", ",", "\[DoubleStruckG]s", ",", "avEout", ",", "runs", 
+        ",", "n"}], "}"}]}]}], "\[IndentingNewLine]", "]"}]}], 
+  "\[IndentingNewLine]"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"Experiment1", "[", "]"}], ":=", 
+   RowBox[{"DoEoutTest", "[", 
+    RowBox[{"lrs\[ScriptF]s", ",", "lrs\[DoubleStruckG]s"}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{
+   RowBox[{"{", 
+    RowBox[{
+    "e1\[ScriptF]s", ",", "e1\[DoubleStruckG]s", ",", "e1avEout", ",", 
+     "e1runs", ",", "e1n"}], "}"}], "=", 
+   RowBox[{"Experiment1", "[", "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{"StringForm", "[", 
+  RowBox[{
+  "\"\<Logistic regression results\\n(runs=``, N=``):\\naverage (class.) \!\(\*
+StyleBox[SubscriptBox[\"E\", \"out\"],
+FontColor->RGBColor[0, 0, 1]]\)=``\>\"", ",", "e1runs", ",", "e1n", ",", " ", 
+   
+   RowBox[{"e1avEout", "\[Times]", "1."}]}], 
+  "]"}], "\[IndentingNewLine]"}], "Input",
+ CellChangeTimes->{{3.684858418284562*^9, 3.684858430045397*^9}, {
+   3.6848584754109173`*^9, 3.684858505962378*^9}, {3.684858649458806*^9, 
+   3.684858683583171*^9}, {3.6848587188380337`*^9, 3.684858722356453*^9}, {
+   3.684858856608053*^9, 3.684858885356879*^9}, {3.684858942225646*^9, 
+   3.6848589793491163`*^9}, {3.684859010292239*^9, 3.684859020203451*^9}, {
+   3.684859153762327*^9, 3.684859180588788*^9}, {3.6848592503917017`*^9, 
+   3.684859307778578*^9}, {3.684859352874118*^9, 3.684859404654448*^9}, {
+   3.684859487823214*^9, 3.684859487869149*^9}, {3.684859595604858*^9, 
+   3.684859602875854*^9}, {3.684859761927103*^9, 3.684859767884535*^9}, {
+   3.6848598640485992`*^9, 3.6848598685506153`*^9}, {3.6848599335448847`*^9, 
+   3.68485999136656*^9}, 3.684860169270699*^9, {3.6848602375821457`*^9, 
+   3.684860238341825*^9}, {3.6848753374097958`*^9, 3.684875382183506*^9}, 
+   3.6849450018469467`*^9, {3.6849453422083406`*^9, 3.684945362007065*^9}, {
+   3.684945410090613*^9, 3.684945412706167*^9}, {3.686884299190927*^9, 
+   3.686884321195737*^9}, {3.686885722940549*^9, 3.686885725148334*^9}, {
+   3.686893219662039*^9, 3.686893275770938*^9}, {3.686893570617432*^9, 
+   3.6868935728868017`*^9}, {3.686893652829782*^9, 3.686893723048916*^9}, {
+   3.686893793838942*^9, 3.686893803477689*^9}, {3.68689473149026*^9, 
+   3.68689473658325*^9}, {3.686894865475124*^9, 3.686894882385459*^9}, {
+   3.686894996149467*^9, 3.686895037676324*^9}, {3.6868950739052277`*^9, 
+   3.6868950932338753`*^9}, {3.686895386302391*^9, 3.68689556127773*^9}, {
+   3.6868959423133173`*^9, 3.6868959816142187`*^9}, {3.686897683963849*^9, 
+   3.686897684224986*^9}, {3.686897789054633*^9, 3.686897801195716*^9}, {
+   3.686898196245388*^9, 3.686898203813014*^9}, {3.6868989637029*^9, 
+   3.686898969652483*^9}, {3.686899352956814*^9, 3.686899375193789*^9}, {
+   3.692453319767209*^9, 3.69245332024343*^9}, {3.692453352317946*^9, 
+   3.692453408726686*^9}}],
+
+Cell[BoxData[
+ InterpretationBox["\<\"Logistic regression results\\n(runs=\\!\\(\\*RowBox[{\
+\\\"100\\\"}]\\), N=\\!\\(\\*RowBox[{\\\"100\\\"}]\\)):\\naverage (class.) \
+\\!\\(\\*\\nStyleBox[SubscriptBox[\\\"E\\\", \
+\\\"out\\\"],\\nFontColor->RGBColor[0, 0, 1]]\\)=\\!\\(\\*RowBox[{\\\"{\\\", \
+\\\"0.10275427439061825`\\\", \\\"}\\\"}]\\)\"\>",
+  StringForm[
+  "Logistic regression results\n(runs=``, N=``):\naverage (class.) \!\(\*\n\
+StyleBox[SubscriptBox[\"E\", \"out\"],\nFontColor->RGBColor[0, 0, 1]]\)=``", 
+   100, 100, {0.10275427439061825`}],
+  Editable->False]], "Output",
+ CellChangeTimes->{3.6868961258593817`*^9, 3.6868980385021544`*^9, 
+  3.686898386423991*^9, 3.686898951978155*^9, 3.686899207977591*^9, 
+  3.686899514571652*^9, 3.692453132168798*^9, 3.692453603169853*^9},
+ Background->RGBColor[0.88, 1, 0.88]]
+}, Open  ]]
+},
+WindowSize->{931, 751},
+WindowMargins->{{25, Automatic}, {Automatic, 36}},
+Magnification:>1.25 Inherited,
+FrontEndVersion->"10.3 for Mac OS X x86 (32-bit, 64-bit Kernel) (December 10, \
+2015)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 2653, 58, 444, "Text"],
+Cell[3214, 80, 349, 9, 77, "Input"],
+Cell[3566, 91, 19595, 428, 2032, "Input"],
+Cell[23164, 521, 412, 12, 59, "Text"],
+Cell[23579, 535, 671, 16, 119, "Input"],
+Cell[CellGroupData[{
+Cell[24275, 555, 5596, 120, 848, "Input"],
+Cell[29874, 677, 929, 15, 71, "Output"]
+}, Open  ]],
+Cell[30818, 695, 749, 15, 98, "Input"],
+Cell[CellGroupData[{
+Cell[31592, 714, 7642, 168, 938, "Input"],
+Cell[39237, 884, 828, 14, 112, "Output"]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)
